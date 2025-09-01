@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      health_entries: {
+        Row: {
+          block_number: number | null
+          confidence_score: number | null
+          created_at: string
+          data_hash: string
+          entry_text: string
+          id: string
+          mood: string
+          severity: string
+          summary: string
+          symptoms: string[]
+          tx_hash: string | null
+          updated_at: string
+          wallet_address: string
+        }
+        Insert: {
+          block_number?: number | null
+          confidence_score?: number | null
+          created_at?: string
+          data_hash: string
+          entry_text: string
+          id?: string
+          mood: string
+          severity: string
+          summary: string
+          symptoms?: string[]
+          tx_hash?: string | null
+          updated_at?: string
+          wallet_address: string
+        }
+        Update: {
+          block_number?: number | null
+          confidence_score?: number | null
+          created_at?: string
+          data_hash?: string
+          entry_text?: string
+          id?: string
+          mood?: string
+          severity?: string
+          summary?: string
+          symptoms?: string[]
+          tx_hash?: string | null
+          updated_at?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

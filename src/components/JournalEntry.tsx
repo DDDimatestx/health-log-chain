@@ -15,7 +15,7 @@ interface AnalysisResult {
 }
 
 interface JournalEntryProps {
-  onEntrySubmitted: (entry: string, analysis: AnalysisResult, hash: string) => void;
+  onEntrySubmitted: (entryText: string, analysis: AnalysisResult, dataHash: string, txHash: string) => void;
   account: string | null;
 }
 
@@ -76,7 +76,8 @@ const JournalEntry = ({ onEntrySubmitted, account }: JournalEntryProps) => {
       
       const mockHash = '0x' + Math.random().toString(16).substr(2, 40);
       
-      onEntrySubmitted(entry, analysis, mockHash);
+      const dataHash = 'mock-hash-' + Date.now();
+      onEntrySubmitted(entry, analysis, dataHash, mockHash);
       
       // Reset form
       setEntry('');

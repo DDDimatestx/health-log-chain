@@ -136,15 +136,15 @@ export const useWallet = () => {
     try {
       const signer = await provider.getSigner();
       
-      // Create a simple message with the hash
+      // For hackathon - simple signature approach
+      // TODO: Replace with actual smart contract interaction
       const message = `MedJournal Entry Hash: ${dataHash}\nTimestamp: ${new Date().toISOString()}`;
-      
-      // Sign the message
       const signature = await signer.signMessage(message);
       
-      // In a real implementation, you would submit this to a smart contract
-      // For now, we'll return the signature as the transaction hash
-      return signature;
+      // Simulate transaction hash for UI
+      const mockTxHash = `0x${ethers.keccak256(ethers.toUtf8Bytes(signature + Date.now())).slice(2)}`;
+      
+      return mockTxHash;
     } catch (error: any) {
       throw new Error(`Failed to sign transaction: ${error.message}`);
     }

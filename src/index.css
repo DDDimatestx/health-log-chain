@@ -8,33 +8,61 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Medical themed color palette */
+    --background: 210 20% 98%;
+    --foreground: 210 15% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 210 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 210 15% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Medical blue primary */
+    --primary: 210 85% 55%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 210 85% 70%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Health green secondary */
+    --secondary: 150 60% 50%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 210 15% 55%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 200 95% 65%;
+    --accent-foreground: 210 15% 15%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 210 20% 90%;
+    --input: 210 20% 95%;
+    --ring: 210 85% 55%;
+
+    /* Custom medical theme colors */
+    --medical-blue: 210 85% 55%;
+    --medical-blue-light: 210 85% 70%;
+    --medical-blue-dark: 210 85% 40%;
+    --health-green: 150 60% 50%;
+    --health-green-light: 150 60% 65%;
+    --blockchain-purple: 260 75% 60%;
+    --blockchain-purple-light: 260 75% 75%;
+
+    /* Gradients */
+    --gradient-medical: linear-gradient(135deg, hsl(210 85% 55%), hsl(200 95% 65%));
+    --gradient-health: linear-gradient(135deg, hsl(150 60% 50%), hsl(120 50% 55%));
+    --gradient-blockchain: linear-gradient(135deg, hsl(260 75% 60%), hsl(280 70% 65%));
+    --gradient-hero: linear-gradient(135deg, hsl(210 85% 55%), hsl(260 75% 60%));
+
+    /* Shadows */
+    --shadow-medical: 0 4px 20px -4px hsl(210 85% 55% / 0.25);
+    --shadow-success: 0 4px 20px -4px hsl(150 60% 50% / 0.25);
+    --shadow-blockchain: 0 4px 20px -4px hsl(260 75% 60% / 0.25);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --radius: 0.5rem;
 

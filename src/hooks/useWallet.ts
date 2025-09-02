@@ -3,8 +3,8 @@ import { ethers } from 'ethers';
 import { useToast } from '@/hooks/use-toast';
 import { MedJournalABI } from '@/contracts/MedJournalABI';
 
-// Замените этот адрес на адрес вашего задеплоенного контракта
-const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000"; // TODO: Вставить реальный адрес
+// Replace this address with your deployed contract address
+const CONTRACT_ADDRESS = "0xe322b1488dacac9a6f517f913f1a27fa1e52d9b9";
 
 declare global {
   interface Window {
@@ -137,48 +137,27 @@ export const useWallet = () => {
       throw new Error('Wallet not connected');
     }
 
-    // Проверяем, что контракт задеплоен
-    if (CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
-      // Fallback: старый способ с подписью для тестирования
-      try {
-        const signer = await provider.getSigner();
-        const message = `MedJournal Entry Hash: ${dataHash}\nTimestamp: ${new Date().toISOString()}`;
-        const signature = await signer.signMessage(message);
-        const mockTxHash = `0x${ethers.keccak256(ethers.toUtf8Bytes(signature + Date.now())).slice(2)}`;
-        
-        toast({
-          title: "Симуляция записи",
-          description: "Контракт не задеплоен - используется симуляция",
-          variant: "default"
-        });
-        
-        return mockTxHash;
-      } catch (error: any) {
-        throw new Error(`Failed to sign: ${error.message}`);
-      }
-    }
-
     try {
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, MedJournalABI, signer);
       
-      // Конвертируем строку хэша в bytes32
+      // Convert hash string to bytes32
       const hashBytes32 = ethers.keccak256(ethers.toUtf8Bytes(dataHash));
       
-      // Вызываем функцию recordEntry в смарт-контракте
-      const tx = await contract.recordEntry(hashBytes32, ""); // пустой IPFS hash пока
+      // Call recordEntry function in smart contract
+      const tx = await contract.recordEntry(hashBytes32, ""); // empty IPFS hash for now
       
       toast({
-        title: "Транзакция отправлена",
-        description: "Ожидаем подтверждения в блокчейне...",
+        title: "Transaction Sent",
+        description: "Waiting for blockchain confirmation...",
       });
       
-      // Ждем подтверждения транзакции
+      // Wait for transaction confirmation
       const receipt = await tx.wait();
       
       toast({
-        title: "Запись сохранена в блокчейн",
-        description: `Транзакция: ${receipt.hash}`,
+        title: "Entry Saved to Blockchain",
+        description: `Transaction: ${receipt.hash}`,
       });
       
       return receipt.hash;
@@ -188,10 +167,10 @@ export const useWallet = () => {
     }
   };
 
-  // Новая функция для проверки записи в блокчейне
+  // New function to verify entry on blockchain
   const verifyEntryOnChain = async (dataHash: string) => {
-    if (!provider || CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
-      return { exists: false, message: "Contract not deployed" };
+    if (!provider) {
+      return { exists: false, message: "Wallet not connected" };
     }
 
     try {

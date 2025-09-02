@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Brain, Shield, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useWallet } from '@/hooks/useWallet';
 
 interface AnalysisResult {
   symptoms: string[];
@@ -25,6 +26,7 @@ const JournalEntry = ({ onEntrySubmitted, account }: JournalEntryProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const { toast } = useToast();
+  const { signAndSubmitHash } = useWallet();
 
   const analyzeEntry = async () => {
     if (!entry.trim()) {
@@ -71,13 +73,19 @@ const JournalEntry = ({ onEntrySubmitted, account }: JournalEntryProps) => {
 
     setIsSubmitting(true);
     try {
-      // Simulate blockchain submission
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Create a hash of the entry data
+      const entryData = JSON.stringify({
+        entry,
+        analysis,
+        timestamp: new Date().toISOString(),
+        account
+      });
       
-      const mockHash = '0x' + Math.random().toString(16).substr(2, 40);
+      // Submit to blockchain using real wallet function
+      const txHash = await signAndSubmitHash(entryData);
       
-      const dataHash = 'mock-hash-' + Date.now();
-      onEntrySubmitted(entry, analysis, dataHash, mockHash);
+      // Submit to our database
+      onEntrySubmitted(entry, analysis, entryData, txHash);
       
       // Reset form
       setEntry('');
@@ -87,10 +95,10 @@ const JournalEntry = ({ onEntrySubmitted, account }: JournalEntryProps) => {
         title: "Entry Verified!",
         description: "Your health journal entry has been permanently recorded on the blockchain.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Submission Failed",
-        description: "Failed to submit to blockchain. Please try again.",
+        description: error.message || "Failed to submit to blockchain. Please try again.",
         variant: "destructive"
       });
     } finally {

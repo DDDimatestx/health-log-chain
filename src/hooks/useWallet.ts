@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { useToast } from '@/hooks/use-toast';
+import { MedJournalABI } from '@/contracts/MedJournalABI';
+
+// Замените этот адрес на адрес вашего задеплоенного контракта
+const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000"; // TODO: Вставить реальный адрес
 
 declare global {
   interface Window {
@@ -133,20 +137,78 @@ export const useWallet = () => {
       throw new Error('Wallet not connected');
     }
 
+    // Проверяем, что контракт задеплоен
+    if (CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+      // Fallback: старый способ с подписью для тестирования
+      try {
+        const signer = await provider.getSigner();
+        const message = `MedJournal Entry Hash: ${dataHash}\nTimestamp: ${new Date().toISOString()}`;
+        const signature = await signer.signMessage(message);
+        const mockTxHash = `0x${ethers.keccak256(ethers.toUtf8Bytes(signature + Date.now())).slice(2)}`;
+        
+        toast({
+          title: "Симуляция записи",
+          description: "Контракт не задеплоен - используется симуляция",
+          variant: "default"
+        });
+        
+        return mockTxHash;
+      } catch (error: any) {
+        throw new Error(`Failed to sign: ${error.message}`);
+      }
+    }
+
     try {
       const signer = await provider.getSigner();
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, MedJournalABI, signer);
       
-      // For hackathon - simple signature approach
-      // TODO: Replace with actual smart contract interaction
-      const message = `MedJournal Entry Hash: ${dataHash}\nTimestamp: ${new Date().toISOString()}`;
-      const signature = await signer.signMessage(message);
+      // Конвертируем строку хэша в bytes32
+      const hashBytes32 = ethers.keccak256(ethers.toUtf8Bytes(dataHash));
       
-      // Simulate transaction hash for UI
-      const mockTxHash = `0x${ethers.keccak256(ethers.toUtf8Bytes(signature + Date.now())).slice(2)}`;
+      // Вызываем функцию recordEntry в смарт-контракте
+      const tx = await contract.recordEntry(hashBytes32, ""); // пустой IPFS hash пока
       
-      return mockTxHash;
+      toast({
+        title: "Транзакция отправлена",
+        description: "Ожидаем подтверждения в блокчейне...",
+      });
+      
+      // Ждем подтверждения транзакции
+      const receipt = await tx.wait();
+      
+      toast({
+        title: "Запись сохранена в блокчейн",
+        description: `Транзакция: ${receipt.hash}`,
+      });
+      
+      return receipt.hash;
     } catch (error: any) {
-      throw new Error(`Failed to sign transaction: ${error.message}`);
+      console.error('Smart contract error:', error);
+      throw new Error(`Failed to record on blockchain: ${error.message}`);
+    }
+  };
+
+  // Новая функция для проверки записи в блокчейне
+  const verifyEntryOnChain = async (dataHash: string) => {
+    if (!provider || CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+      return { exists: false, message: "Contract not deployed" };
+    }
+
+    try {
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, MedJournalABI, provider);
+      const hashBytes32 = ethers.keccak256(ethers.toUtf8Bytes(dataHash));
+      
+      const [exists, user, timestamp, ipfsHash] = await contract.verifyEntry(hashBytes32);
+      
+      return {
+        exists,
+        user,
+        timestamp: timestamp ? new Date(Number(timestamp) * 1000) : null,
+        ipfsHash
+      };
+    } catch (error: any) {
+      console.error('Verification error:', error);
+      return { exists: false, error: error.message };
     }
   };
 
@@ -155,6 +217,7 @@ export const useWallet = () => {
     isConnecting,
     provider,
     connectWallet,
-    signAndSubmitHash
+    signAndSubmitHash,
+    verifyEntryOnChain
   };
 };

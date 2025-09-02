@@ -87,7 +87,7 @@ contract MedJournal {
      * @return timestamp When it was recorded
      * @return ipfsHash Associated IPFS hash
      */
-    function verifyEntry(bytes32 _dataHash) external view returns (
+    function verifyEntry(bytes32 _dataHash) external returns (
         bool exists,
         address user,
         uint256 timestamp,

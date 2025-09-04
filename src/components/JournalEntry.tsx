@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Brain, Shield, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useWallet } from '@/hooks/useWallet';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AnalysisResult {
   symptoms: string[];
@@ -40,19 +41,21 @@ const JournalEntry = ({ onEntrySubmitted, account }: JournalEntryProps) => {
 
     setIsAnalyzing(true);
     try {
-      // Simulate AI analysis - in real implementation, call Gemini API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock analysis result
-      const mockAnalysis: AnalysisResult = {
-        symptoms: ['headache', 'fatigue', 'mild nausea'],
-        mood: 'slightly anxious',
-        severity: 'medium',
-        summary: 'Patient reports moderate symptoms including headache and fatigue, with mild anxiety levels.',
-        confidence: 0.85
-      };
+      // Real AI analysis via Supabase Edge Function (Gemini)
+      const { data, error } = await supabase.functions.invoke('analyze-entry', {
+        body: { text: entry },
+      });
 
-      setAnalysis(mockAnalysis);
+      if (error) {
+        throw error;
+      }
+
+      const result = data?.analysis as AnalysisResult | undefined;
+      if (!result) {
+        throw new Error('AI returned no analysis');
+      }
+
+      setAnalysis(result);
       toast({
         title: "Analysis Complete",
         description: "AI has successfully analyzed your health journal entry.",

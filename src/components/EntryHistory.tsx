@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { History, ExternalLink, Calendar, Shield } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { History, ExternalLink, Calendar, Shield, Download, FileText, FileImage } from 'lucide-react';
 import { format } from 'date-fns';
+import jsPDF from 'jspdf';
 
 interface HistoryEntry {
   id: string;
@@ -34,6 +36,100 @@ const EntryHistory = ({ entries }: EntryHistoryProps) => {
     window.open(`https://sepolia.etherscan.io/tx/${txHash}`, '_blank');
   };
 
+  const saveAsText = () => {
+    const content = entries.map((entry, index) => {
+      return `
+HEALTH JOURNAL ENTRY #${index + 1}
+Date: ${format(entry.date, 'MMM dd, yyyy HH:mm')}
+Transaction: ${entry.txHash}
+${entry.blockNumber ? `Block: #${entry.blockNumber}` : ''}
+
+ENTRY:
+${entry.entry}
+
+ANALYSIS:
+Symptoms: ${entry.symptoms.join(', ')}
+Mood: ${entry.mood}
+Severity: ${entry.severity}
+Summary: ${entry.summary}
+
+${'='.repeat(50)}
+`;
+    }).join('\n');
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `health-journal-${format(new Date(), 'yyyy-MM-dd')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const saveAsPDF = () => {
+    const pdf = new jsPDF();
+    const pageHeight = pdf.internal.pageSize.height;
+    let y = 20;
+
+    // Title
+    pdf.setFontSize(20);
+    pdf.text('Health Journal Report', 20, y);
+    y += 15;
+
+    pdf.setFontSize(12);
+    pdf.text(`Generated: ${format(new Date(), 'MMM dd, yyyy HH:mm')}`, 20, y);
+    y += 10;
+
+    pdf.text(`Total Entries: ${entries.length}`, 20, y);
+    y += 20;
+
+    entries.forEach((entry, index) => {
+      // Check if we need a new page
+      if (y > pageHeight - 60) {
+        pdf.addPage();
+        y = 20;
+      }
+
+      // Entry header
+      pdf.setFontSize(14);
+      pdf.text(`Entry #${index + 1}`, 20, y);
+      y += 10;
+
+      pdf.setFontSize(10);
+      pdf.text(`Date: ${format(entry.date, 'MMM dd, yyyy HH:mm')}`, 20, y);
+      y += 6;
+      pdf.text(`Transaction: ${entry.txHash}`, 20, y);
+      y += 6;
+      if (entry.blockNumber) {
+        pdf.text(`Block: #${entry.blockNumber}`, 20, y);
+        y += 6;
+      }
+      y += 4;
+
+      // Entry content
+      pdf.setFontSize(12);
+      const entryLines = pdf.splitTextToSize(`Entry: ${entry.entry}`, 170);
+      pdf.text(entryLines, 20, y);
+      y += entryLines.length * 6 + 4;
+
+      // Analysis
+      pdf.text(`Symptoms: ${entry.symptoms.join(', ')}`, 20, y);
+      y += 6;
+      pdf.text(`Mood: ${entry.mood}`, 20, y);
+      y += 6;
+      pdf.text(`Severity: ${entry.severity}`, 20, y);
+      y += 6;
+      
+      const summaryLines = pdf.splitTextToSize(`Summary: ${entry.summary}`, 170);
+      pdf.text(summaryLines, 20, y);
+      y += summaryLines.length * 6 + 15;
+    });
+
+    pdf.save(`health-journal-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+  };
+
   if (entries.length === 0) {
     return (
       <Card className="shadow-medical">
@@ -61,9 +157,27 @@ const EntryHistory = ({ entries }: EntryHistoryProps) => {
         <CardTitle className="flex items-center space-x-2">
           <History className="h-5 w-5 text-primary" />
           <span>Verified Entry History</span>
-          <Badge variant="secondary" className="ml-auto">
+          <Badge variant="secondary" className="ml-2">
             {entries.length} entries
           </Badge>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="ml-auto">
+                <Download className="h-4 w-4 mr-2" />
+                Save Records
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={saveAsText}>
+                <FileText className="h-4 w-4 mr-2" />
+                Save as Text
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={saveAsPDF}>
+                <FileImage className="h-4 w-4 mr-2" />
+                Save as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardTitle>
       </CardHeader>
       <CardContent>
